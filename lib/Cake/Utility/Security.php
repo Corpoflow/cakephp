@@ -184,8 +184,8 @@ class Security {
 		if (function_exists('openssl_random_pseudo_bytes')) {
 			return openssl_random_pseudo_bytes($length);
 		}
-		if (function_exists('mcrypt_create_iv')) {
-			return mcrypt_create_iv($length, MCRYPT_DEV_URANDOM);
+		if (function_exists('phpseclib_mcrypt_create_iv')) {
+			return phpseclib_mcrypt_create_iv($length, MCRYPT_DEV_URANDOM);
 		}
 		trigger_error(
 			'You do not have a safe source of random data available. ' .
@@ -265,22 +265,22 @@ class Security {
 		}
 		$algorithm = MCRYPT_RIJNDAEL_256;
 		$mode = MCRYPT_MODE_CBC;
-		$ivSize = mcrypt_get_iv_size($algorithm, $mode);
+		$ivSize = phpseclib_mcrypt_get_iv_size($algorithm, $mode);
 
 		$cryptKey = substr($key, 0, 32);
 
 		if ($operation === 'encrypt') {
-			$iv = mcrypt_create_iv($ivSize, MCRYPT_RAND);
-			return $iv . '$$' . mcrypt_encrypt($algorithm, $cryptKey, $text, $mode, $iv);
+			$iv = phpseclib_mcrypt_create_iv($ivSize, MCRYPT_RAND);
+			return $iv . '$$' . phpseclib_mcrypt_encrypt($algorithm, $cryptKey, $text, $mode, $iv);
 		}
 		// Backwards compatible decrypt with fixed iv
 		if (substr($text, $ivSize, 2) !== '$$') {
 			$iv = substr($key, strlen($key) - 32, 32);
-			return rtrim(mcrypt_decrypt($algorithm, $cryptKey, $text, $mode, $iv), "\0");
+			return rtrim(phpseclib_mcrypt_decrypt($algorithm, $cryptKey, $text, $mode, $iv), "\0");
 		}
 		$iv = substr($text, 0, $ivSize);
 		$text = substr($text, $ivSize + 2);
-		return rtrim(mcrypt_decrypt($algorithm, $cryptKey, $text, $mode, $iv), "\0");
+		return rtrim(phpseclib_mcrypt_decrypt($algorithm, $cryptKey, $text, $mode, $iv), "\0");
 	}
 
 /**
@@ -365,9 +365,9 @@ class Security {
 		} else {
 			$algorithm = MCRYPT_RIJNDAEL_128;
 			$mode = MCRYPT_MODE_CBC;
-			$ivSize = mcrypt_get_iv_size($algorithm, $mode);
-			$iv = mcrypt_create_iv($ivSize, MCRYPT_DEV_URANDOM);
-			$ciphertext = $iv . mcrypt_encrypt($algorithm, $key, $plain, $mode, $iv);
+			$ivSize = phpseclib_mcrypt_get_iv_size($algorithm, $mode);
+			$iv = phpseclib_mcrypt_create_iv($ivSize, MCRYPT_DEV_URANDOM);
+			$ciphertext = $iv . phpseclib_mcrypt_encrypt($algorithm, $key, $plain, $mode, $iv);
 		}
 
 		$hmac = hash_hmac('sha256', $ciphertext, $key);
@@ -430,10 +430,10 @@ class Security {
 		} else {
 			$algorithm = MCRYPT_RIJNDAEL_128;
 			$mode = MCRYPT_MODE_CBC;
-			$ivSize = mcrypt_get_iv_size($algorithm, $mode);
+			$ivSize = phpseclib_mcrypt_get_iv_size($algorithm, $mode);
 			$iv = substr($cipher, 0, $ivSize);
 			$cipher = substr($cipher, $ivSize);
-			$plain = mcrypt_decrypt($algorithm, $key, $cipher, $mode, $iv);
+			$plain = phpseclib_mcrypt_decrypt($algorithm, $key, $cipher, $mode, $iv);
 		}
 
 		return rtrim($plain, "\0");
